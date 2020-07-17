@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Xabe.FFmpeg;
 using Konsole;
 using McMaster.Extensions.CommandLineUtils;
+using System.Collections.Generic;
 
 namespace Transcoder
 {
@@ -13,22 +14,26 @@ namespace Transcoder
 	{
 		static async Task Main(string[] args)
 		{
+
 			Console.WriteLine("Enter path:");
 			string path = Console.ReadLine();
 
 			Console.Clear();
 
+			//await DownloadM3U8(path, @"C:\Users\inaki\Videos\downloads\test.mp4");
+
+
 			if (Path.HasExtension(path) && (Path.GetExtension(path) == ".mkv"))
 			{
 
-				await StartConverting(path);
+				await H265_cuvid(path);
 				Console.WriteLine("Finished All.");
 
 			}
 
 			else
 			{
-				bool recurse = true;
+				bool recurse = false;
 				string videoFilter = @"$(?<=\.(mkv|mp4|avi|mk3d|flv|wmv|m4v|webm))";
 				string subsFilter = @"$(?<=\.(srt|idx|sub))";
 
@@ -48,29 +53,34 @@ namespace Transcoder
 				if (Prompt.GetYesNo("Look Good?", true))
 				{
 					Console.Clear();
-					for (int i = 0; i < videos.Count; i++, i++)
-					{
-
-						if ((i + 1) < videos.Count)
-						{
-							await Task.WhenAll(StartConverting(videos[i]), StartConverting(videos[i + 1]));
-						}
-
-						else
-							await StartConverting(videos[i]);
-
-					}
-
-					Console.WriteLine("All Done!");
+					await StartConverting(videos);
+					
 				}
 
 			}
 		}
 
 
-		////ffmpeg - stats - vsync 0 - hwaccel cuvid - c:v h264_cuvid -i @file - c:v hevc_nvenc -x265 -params crf = 20 - spatial_aq 1 - rc - lookahead 20 - preset slow - c:a aac -b:a 224k - map 0 @fname - TRANSCODED.mkv
+		
+		private static async Task StartConverting(List<string> videos)
+		{
+			for (int i = 0; i < videos.Count; i++, i++)
+			{
 
-		private static async Task StartConverting(string fileName)
+				if ((i + 1) < videos.Count)
+				{
+					await Task.WhenAll(H265_cuvid(videos[i]), H265_cuvid(videos[i + 1]));
+				}
+
+				else
+					await H265_cuvid(videos[i]);
+
+			}
+
+			Console.WriteLine("All Done!");
+		}
+
+		private static async Task H265_cuvid(string fileName)
 		{
 			IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(fileName);
 			IStream videoStream = mediaInfo.VideoStreams.FirstOrDefault()
@@ -102,7 +112,33 @@ namespace Transcoder
 			};
 
 			await conversion.Start();
+		}
 
+		private static async Task DownloadM3U8(string url, string outputPath)
+		{
+			var _url = new Uri(url);
+
+			IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(url);
+
+			//var conversion = FFmpeg.Conversions.New();
+			var conversion = await FFmpeg.Conversions.FromSnippet.SaveM3U8Stream(_url, outputPath);
+			conversion
+			//	.AddStream(mediaInfo.VideoStreams.FirstOrDefault().CopyStream())
+			//	.AddStream(mediaInfo.AudioStreams.FirstOrDefault().CopyStream())
+			//	.AddStream(mediaInfo.SubtitleStreams)
+				.SetOverwriteOutput(true)
+			;
+
+			var p = new ProgressBar(PbStyle.SingleLine, 100);
+
+
+			conversion.OnProgress += (sender, args) =>
+			{
+				p.Refresh(args.Percent, Path.GetFileNameWithoutExtension(outputPath) + $" - [{ args.TotalLength - args.Duration}]");
+			};
+
+
+			await conversion.Start();
 		}
 	}
 }

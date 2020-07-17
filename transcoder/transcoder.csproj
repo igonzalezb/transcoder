@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Goblinfactory.ProgressBar" Version="0.4.0" />
+    <PackageReference Include="Goblinfactory.Konsole" Version="6.2.0" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
     <PackageReference Include="Xabe.FFmpeg" Version="4.1.1" />
   </ItemGroup>
