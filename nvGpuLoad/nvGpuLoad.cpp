@@ -5,6 +5,14 @@
 #include <windows.h>
 #include <iostream>
 
+
+#if defined(_M_X64) || defined(__amd64__)
+#define NVAPI_DLL "nvapi64.dll"
+#else
+#define NVAPI_DLL "nvapi.dll"
+#endif
+
+
 // magic numbers, do not change them
 #define NVAPI_MAX_PHYSICAL_GPUS   64
 #define NVAPI_MAX_USAGES_PER_GPU  34
@@ -19,10 +27,10 @@ extern "C"
 {
 	__declspec(dllexport) int getGpuLoad()
 	{
-		HMODULE hmod = LoadLibraryA("nvapi.dll");
+		HMODULE hmod = LoadLibraryA(NVAPI_DLL);
 		if (hmod == NULL)
 		{
-			std::cerr << "Couldn't find nvapi.dll" << std::endl;
+			std::cerr << "Couldn't find" NVAPI_DLL << std::endl;
 			return 1;
 		}
 
@@ -31,6 +39,7 @@ extern "C"
 		NvAPI_Initialize_t          NvAPI_Initialize = NULL;
 		NvAPI_EnumPhysicalGPUs_t    NvAPI_EnumPhysicalGPUs = NULL;
 		NvAPI_GPU_GetUsages_t       NvAPI_GPU_GetUsages = NULL;
+		
 
 		// nvapi_QueryInterface is a function used to retrieve other internal functions in nvapi.dll
 		NvAPI_QueryInterface = (NvAPI_QueryInterface_t)GetProcAddress(hmod, "nvapi_QueryInterface");
@@ -39,9 +48,8 @@ extern "C"
 		NvAPI_Initialize = (NvAPI_Initialize_t)(*NvAPI_QueryInterface)(0x0150E828);
 		NvAPI_EnumPhysicalGPUs = (NvAPI_EnumPhysicalGPUs_t)(*NvAPI_QueryInterface)(0xE5AC921F);
 		NvAPI_GPU_GetUsages = (NvAPI_GPU_GetUsages_t)(*NvAPI_QueryInterface)(0x189A1FDF);
-
-		if (NvAPI_Initialize == NULL || NvAPI_EnumPhysicalGPUs == NULL ||
-			NvAPI_EnumPhysicalGPUs == NULL || NvAPI_GPU_GetUsages == NULL)
+		 
+		if (NvAPI_Initialize == NULL || NvAPI_EnumPhysicalGPUs == NULL || NvAPI_GPU_GetUsages == NULL)
 		{
 			std::cerr << "Couldn't get functions in nvapi.dll" << std::endl;
 			return 2;
@@ -60,6 +68,7 @@ extern "C"
 		(*NvAPI_EnumPhysicalGPUs)(gpuHandles, &gpuCount);
 
 		(*NvAPI_GPU_GetUsages)(gpuHandles[0], gpuUsages);
+		
 		int usage = gpuUsages[3];
 
 		return usage;

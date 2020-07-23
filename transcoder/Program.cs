@@ -7,6 +7,10 @@ using Xabe.FFmpeg;
 using Konsole;
 using McMaster.Extensions.CommandLineUtils;
 using System.Collections.Generic;
+using PCPerformance;
+using System.Threading;
+
+using System.Diagnostics;
 
 namespace Transcoder
 {
@@ -14,21 +18,29 @@ namespace Transcoder
 	{
 		static async Task Main(string[] args)
 		{
+			Console.Title = "Transcoder";
 
 			Console.WriteLine("Enter path:");
 			string path = Console.ReadLine();
 
 			Console.Clear();
+			Console.CursorVisible = false;
 
 			//await DownloadM3U8(path, @"C:\Users\inaki\Videos\downloads\test.mp4");
+			path = path.Trim('"');
 
-
+			
 			if (Path.HasExtension(path) && (Path.GetExtension(path) == ".mkv"))
 			{
+				Console.Clear();
+				//var per = new PerformanceMonitor();
 
+				//per.StartPerformanceBoxAsync();
 				await H265_cuvid(path);
+				//await Task.WhenAny(H265_cuvid(path), per.StartPerformanceBoxAsync());
+				//per.Working = false;
 				Console.WriteLine("Finished All.");
-
+				
 			}
 
 			else
@@ -50,14 +62,23 @@ namespace Transcoder
 				{
 					Console.WriteLine(Path.GetFileName(video));
 				}
+				Console.WriteLine("");
 				if (Prompt.GetYesNo("Look Good?", true))
 				{
 					Console.Clear();
+					//var per = new PerformanceMonitor();
+
+					//per.StartPerformanceBoxAsync();
 					await StartConverting(videos);
+					//await Task.WhenAny(per.StartPerformanceBoxAsync(), StartConverting(videos));
+					//per.Working = false;
 					
 				}
 
 			}
+
+			Console.WriteLine("Press Any Key to Exit");
+			Console.ReadKey();
 		}
 
 
@@ -88,8 +109,9 @@ namespace Transcoder
 			IStream audioStream = mediaInfo.AudioStreams.FirstOrDefault()
 				?.SetCodec(AudioCodec.aac);
 
+			var cancellationTokenSource = new CancellationTokenSource();
 
-			string output = Path.Combine(Path.GetDirectoryName(fileName), "out", Path.GetFileNameWithoutExtension(fileName) + "-trans.mkv");
+			string output = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "-trans.mkv");
 
 			var conversion = FFmpeg.Conversions.New();
 			conversion
@@ -111,7 +133,16 @@ namespace Transcoder
 				p.Refresh(args.Percent, Path.GetFileNameWithoutExtension(fileName) + $" - [{ args.TotalLength - args.Duration}]");
 			};
 
-			await conversion.Start();
+			Console.CancelKeyPress += (sender, args) =>
+			{
+				args.Cancel = true;
+				Console.WriteLine("Stopped by user");
+				cancellationTokenSource.Cancel(true);
+			};
+
+
+			await conversion.Start(cancellationTokenSource.Token);
+
 		}
 
 		private static async Task DownloadM3U8(string url, string outputPath)
