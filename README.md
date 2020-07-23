@@ -1,6 +1,10 @@
 # Transcoder
 Cross-plataform ffmpeg transcoder. It would transcode two videos in parallel using NVIDIA hardware acceleration.
 
+## Installation
+Download the pre-compiled latest [Release.](/releases/latest)
+
+The files are ready to run. **FFMPEG MUST BE INSTALLED AND IN PATH.**
 
 ### Usage
 
