@@ -1,5 +1,5 @@
 # Transcoder ![alt text](https://github.com/igonzalezbig/transcoder/transcoder/master/icon.ico?raw=true)
-Cross-plataform ffmpeg transcoder. It would transcode two videos in parallel using NVIDIA hardware acceleration.
+Cross-platform ffmpeg transcoder. It would transcode two videos in parallel using NVIDIA hardware acceleration.
 
 ## Installation
 Download the pre-compiled latest [Release.](/releases/latest)
