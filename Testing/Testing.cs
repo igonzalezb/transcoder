@@ -8,6 +8,8 @@ namespace Testing
 	{
 		static async Task Main(string[] args)
 		{
+			
+
 			var per = new PerformanceMonitor();
 
 			await per.StartPerformanceBoxAsync();
