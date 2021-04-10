@@ -1,6 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+        
         {
             // Use IntelliSense to find out which attributes exist for C# debugging
             // Use hover for the description of the existing attributes
@@ -11,7 +12,7 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/transcoder/bin/Debug/netcoreapp5.0/transcoder.dll",
-            "args": [],
+            "args": ["/home/inaki/Videos/Parks and Recreation/Season 1"],
             "cwd": "${workspaceFolder}/transcoder",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "externalTerminal",

@@ -30,7 +30,7 @@
         {
             "label": "install",
             "command": "dotnet tool install -g --add-source ./dist transcoder",
-            "type": "process",
+            "type": "shell",
             "problemMatcher": "$msCompile",
             "dependsOrder": "sequence",
             "dependsOn": [
@@ -40,7 +40,7 @@
         {
             "label": "uninstall",
             "command": "dotnet tool uninstall -g transcoder",
-            "type": "process",
+            "type": "shell",
             "problemMatcher": "$msCompile"
         },
 

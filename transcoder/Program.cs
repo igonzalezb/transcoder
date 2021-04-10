@@ -19,20 +19,26 @@ namespace Transcoder
 		static async Task Main(string[] args)
 		{
 			Console.Title = "Transcoder";
+			string path;
 
-			Console.WriteLine("Welcome to Transcoder!");
-			Console.WriteLine();
-			Console.WriteLine("The HEVC settings are:");
-			Console.WriteLine("ffmpeg -vsync 0 -hwaccel cuvid -c:v h264_cuvid -i video -c:v hevc_nvenc -x265-params crf=20 -spatial_aq 1 -rc-lookahead 20 -preset slow -c:a aac -b:a 224k -map 0 video-trans.mkv");
-			Console.WriteLine();
-			Console.WriteLine("Enter path:");
-			string path = Console.ReadLine();
+			if (!args.Any())
+			{
+				Console.WriteLine("Welcome to Transcoder!");
+				Console.WriteLine();
+				Console.WriteLine("The HEVC settings are:");
+				Console.WriteLine("ffmpeg -vsync 0 -hwaccel cuvid -c:v h264_cuvid -i video -c:v hevc_nvenc -x265-params crf=20 -spatial_aq 1 -rc-lookahead 20 -preset slow -c:a aac -b:a 224k -map 0 video-trans.mkv");
+				Console.WriteLine();
+				Console.WriteLine("Enter path:");
+				path = Console.ReadLine();
 
-			Console.Clear();
-			Console.CursorVisible = false;
-
-			//await DownloadM3U8(path, @"C:\Users\inaki\Videos\downloads\test.mp4");
-			//
+				Console.Clear();
+				Console.CursorVisible = false;
+			}
+			else
+			{
+				path = args[0].ToString();
+			}
+			
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
   				path = path.Replace("\'", "");
@@ -45,10 +51,16 @@ namespace Transcoder
 			
 			if (Path.HasExtension(path) && (Path.GetExtension(path) == ".mkv"))
 			{
-				Console.Clear();
-				await H265_cuvid(path);
-				Console.WriteLine("Finished All.");
+				Console.WriteLine(Path.GetFileName(path) + " => " +Path.GetFileNameWithoutExtension(path) + "-trans.mkv");
+				Console.WriteLine("");
 				
+				if (Prompt.GetYesNo("Look Good?", true))
+				{
+					Console.Clear();
+					await H265_cuvid(path);
+					Console.WriteLine("Finished All.");				
+				}
+							
 			}
 
 			else
@@ -61,10 +73,6 @@ namespace Transcoder
 					.GetFiles(path, "*.*", recurse ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
 					.Where(x => Regex.IsMatch(x, videoFilter, RegexOptions.IgnoreCase))
 					.ToList();
-				//var subtitlesSRT = Directory
-				//	.GetFiles(path, "*.*", recurse ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
-				//	.Where(x => Regex.IsMatch(x, subsFilter, RegexOptions.IgnoreCase))
-				//	.ToList();
 
 				foreach (var video in videos)
 				{
@@ -74,13 +82,7 @@ namespace Transcoder
 				if (Prompt.GetYesNo("Look Good?", true))
 				{
 					Console.Clear();
-					//var per = new PerformanceMonitor();
-
-					//per.StartPerformanceBoxAsync();
-					await StartConverting(videos);
-					//await Task.WhenAny(per.StartPerformanceBoxAsync(), StartConverting(videos));
-					//per.Working = false;
-					
+					await StartConverting(videos);					
 				}
 
 			}
@@ -147,37 +149,8 @@ namespace Transcoder
 				Console.WriteLine("Stopped by user");
 				cancellationTokenSource.Cancel(true);
 			};
-
-
 			await conversion.Start(cancellationTokenSource.Token);
 
 		}
-
-		//private static async Task DownloadM3U8(string url, string outputPath)
-		//{
-		//	var _url = new Uri(url);
-
-		//	IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(url);
-
-		//	//var conversion = FFmpeg.Conversions.New();
-		//	var conversion = await FFmpeg.Conversions.FromSnippet.SaveM3U8Stream(_url, outputPath);
-		//	conversion
-		//	//	.AddStream(mediaInfo.VideoStreams.FirstOrDefault().CopyStream())
-		//	//	.AddStream(mediaInfo.AudioStreams.FirstOrDefault().CopyStream())
-		//	//	.AddStream(mediaInfo.SubtitleStreams)
-		//		.SetOverwriteOutput(true)
-		//	;
-
-		//	var p = new ProgressBar(PbStyle.SingleLine, 100);
-
-
-		//	conversion.OnProgress += (sender, args) =>
-		//	{
-		//		p.Refresh(args.Percent, Path.GetFileNameWithoutExtension(outputPath) + $" - [{ args.TotalLength - args.Duration}]");
-		//	};
-
-
-		//	await conversion.Start();
-		//}
 	}
 }
