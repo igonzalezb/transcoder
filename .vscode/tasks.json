@@ -1,0 +1,54 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/transcoder/transcoder.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "pack",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "pack",
+                "${workspaceFolder}/transcoder/transcoder.csproj",
+            ],
+            "problemMatcher": "$msCompile",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "build"
+            ]
+        },
+        {
+            "label": "install",
+            "command": "dotnet tool install -g --add-source ./dist transcoder",
+            "type": "process",
+            "problemMatcher": "$msCompile",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "pack"
+            ]
+        },
+        {
+            "label": "uninstall",
+            "command": "dotnet tool uninstall -g transcoder",
+            "type": "process",
+            "problemMatcher": "$msCompile"
+        },
+
+        {
+            "label": "publish-linux",
+            "command": "dotnet publish transcoder -r linux-x64 --self-contained true -p:PublishSingleFile=true",
+            "type": "shell",
+            "problemMatcher": "$msCompile"
+        },
+    ]
+}

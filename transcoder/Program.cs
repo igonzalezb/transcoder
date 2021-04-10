@@ -7,10 +7,10 @@ using Xabe.FFmpeg;
 using Konsole;
 using McMaster.Extensions.CommandLineUtils;
 using System.Collections.Generic;
-using PCPerformance;
 using System.Threading;
 
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Transcoder
 {
@@ -32,18 +32,21 @@ namespace Transcoder
 			Console.CursorVisible = false;
 
 			//await DownloadM3U8(path, @"C:\Users\inaki\Videos\downloads\test.mp4");
-			path = path.Trim('"');
-
+			//
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+  				path = path.Replace("\'", "");
+			}
+			else if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				path = path.Trim('"');
+			}
+			
 			
 			if (Path.HasExtension(path) && (Path.GetExtension(path) == ".mkv"))
 			{
 				Console.Clear();
-				//var per = new PerformanceMonitor();
-
-				//per.StartPerformanceBoxAsync();
 				await H265_cuvid(path);
-				//await Task.WhenAny(H265_cuvid(path), per.StartPerformanceBoxAsync());
-				//per.Working = false;
 				Console.WriteLine("Finished All.");
 				
 			}
