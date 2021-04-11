@@ -28,23 +28,6 @@
             ]
         },
         {
-            "label": "install",
-            "command": "dotnet tool install -g --add-source ./dist transcoder",
-            "type": "shell",
-            "problemMatcher": "$msCompile",
-            "dependsOrder": "sequence",
-            "dependsOn": [
-                "pack"
-            ]
-        },
-        {
-            "label": "uninstall",
-            "command": "dotnet tool uninstall -g transcoder",
-            "type": "shell",
-            "problemMatcher": "$msCompile"
-        },
-
-        {
             "label": "publish-linux",
             "command": "dotnet publish transcoder -r linux-x64 --self-contained true -p:PublishSingleFile=true",
             "type": "shell",

@@ -4,13 +4,11 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xabe.FFmpeg;
-using Konsole;
-using McMaster.Extensions.CommandLineUtils;
 using System.Collections.Generic;
 using System.Threading;
-
-using System.Diagnostics;
 using System.Runtime.InteropServices;
+using ShellProgressBar;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace Transcoder
 {
@@ -32,13 +30,12 @@ namespace Transcoder
 				path = Console.ReadLine();
 
 				Console.Clear();
-				Console.CursorVisible = false;
 			}
 			else
 			{
 				path = args[0].ToString();
 			}
-			
+			Console.CursorVisible = false;
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
   				path = path.Replace("\'", "");
@@ -51,14 +48,45 @@ namespace Transcoder
 			
 			if (Path.HasExtension(path) && (Path.GetExtension(path) == ".mkv"))
 			{
-				Console.WriteLine(Path.GetFileName(path) + " => " +Path.GetFileNameWithoutExtension(path) + "-trans.mkv");
+				Console.WriteLine(Path.GetFileName(path));
 				Console.WriteLine("");
 				
-				if (Prompt.GetYesNo("Look Good?", true))
+				if (Prompt.GetYesNo("Look Good?", false))
 				{
 					Console.Clear();
-					await H265_cuvid(path);
-					Console.WriteLine("Finished All.");				
+					try
+					{
+						var pbar_opt = new ProgressBarOptions
+						{
+							BackgroundCharacter = '\u2593',
+							ProgressBarOnBottom = false,
+							ForegroundColorDone = ConsoleColor.Green,
+							ForegroundColor = ConsoleColor.DarkYellow,
+							CollapseWhenFinished = false,
+							DisplayTimeInRealTime = true,
+							ShowEstimatedDuration = false,
+							
+						};
+						var _options = new ProgressBarOptions
+						{
+							ProgressCharacter = '_',
+							ProgressBarOnBottom = true,
+							ForegroundColorDone = ConsoleColor.Green,
+							ForegroundColor = ConsoleColor.White,
+							CollapseWhenFinished = false,
+							DisplayTimeInRealTime = true,				
+						};
+						using var pbar = new ShellProgressBar.ProgressBar(1, "(Press ctrl+c to cancel)", pbar_opt);
+						await H265_cuvid(path, pbar.Spawn(100, Path.GetFileNameWithoutExtension(path) + " - [00:00:00]", _options));
+						Console.WriteLine("Finished All.");	
+					}
+					catch (System.Exception)
+					{
+						Console.WriteLine("Stopped by user");
+					}
+					
+					
+								
 				}
 							
 			}
@@ -67,7 +95,6 @@ namespace Transcoder
 			{
 				bool recurse = false;
 				string videoFilter = @"$(?<=\.(mkv|mp4|avi|mk3d|flv|wmv|m4v|webm))";
-				//string subsFilter = @"$(?<=\.(srt|idx|sub))";
 
 				var videos = Directory
 					.GetFiles(path, "*.*", recurse ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
@@ -76,13 +103,22 @@ namespace Transcoder
 
 				foreach (var video in videos)
 				{
-					Console.WriteLine(Path.GetFileName(video) + " => " +Path.GetFileNameWithoutExtension(video) + "-trans.mkv");
+					Console.WriteLine(Path.GetFileName(video));
 				}
 				Console.WriteLine("");
-				if (Prompt.GetYesNo("Look Good?", true))
+				if (Prompt.GetYesNo("Look Good?", false))
 				{
 					Console.Clear();
-					await StartConverting(videos);					
+					try
+					{
+						await StartConverting(videos);
+						Console.WriteLine("Finished All.");	
+					}
+					catch (System.Exception)
+					{
+						Console.WriteLine("Stopped by user");
+					}
+									
 				}
 
 			}
@@ -95,23 +131,59 @@ namespace Transcoder
 		
 		private static async Task StartConverting(List<string> videos)
 		{
+			var pbar_opt = new ProgressBarOptions
+			{
+				BackgroundCharacter = '\u2593',
+				BackgroundColor = ConsoleColor.DarkGray,
+				ProgressBarOnBottom = false,
+        		ForegroundColorDone = ConsoleColor.Green,
+        		ForegroundColor = ConsoleColor.DarkYellow,
+				CollapseWhenFinished = false,
+				DisplayTimeInRealTime = true,
+				ShowEstimatedDuration = false,
+				
+			};
+			var _options = new ProgressBarOptions
+			{
+				ProgressCharacter = '_',
+				ProgressBarOnBottom = true,
+        		ForegroundColorDone = ConsoleColor.Green,
+        		ForegroundColor = ConsoleColor.White,
+				CollapseWhenFinished = false,
+				DisplayTimeInRealTime = true,				
+			};
+			
+			using var pbar = new ShellProgressBar.ProgressBar(videos.Count, $"Finished: 0 of {videos.Count} - (Press ctrl+c to cancel)", pbar_opt);
+
+			var pbarList = new List<ShellProgressBar.ChildProgressBar>();
+
+			foreach (string video in videos)
+			{
+				pbarList.Add(pbar.Spawn(100, Path.GetFileNameWithoutExtension(video) + " - [00:00:00]", _options));
+				
+			}
 			for (int i = 0; i < videos.Count; i++, i++)
 			{
 
 				if ((i + 1) < videos.Count)
 				{
-					await Task.WhenAll(H265_cuvid(videos[i]), H265_cuvid(videos[i + 1]));
+					await Task.WhenAll(
+						H265_cuvid(videos[i], pbarList[i]), 
+						H265_cuvid(videos[i + 1], pbarList[i+1]));
+					
+					pbar.Tick($"Finished: {i +1} of {videos.Count}");
 				}
 
 				else
-					await H265_cuvid(videos[i]);
+				{
+					await H265_cuvid(videos[i], pbarList[i]);
+					pbar.Tick($"Finished: {i} of {videos.Count}");
+				}
 
 			}
-
-			Console.WriteLine("All Done!");
 		}
 
-		private static async Task H265_cuvid(string fileName)
+		private static async Task H265_cuvid(string fileName, ShellProgressBar.ChildProgressBar pbar)
 		{
 			IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(fileName);
 			IStream videoStream = mediaInfo.VideoStreams.FirstOrDefault()
@@ -121,7 +193,7 @@ namespace Transcoder
 
 			var cancellationTokenSource = new CancellationTokenSource();
 
-			string output = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "-trans.mkv");
+			string output = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "-CODED.mkv");
 
 			var conversion = FFmpeg.Conversions.New();
 			conversion
@@ -136,19 +208,19 @@ namespace Transcoder
 				.SetAudioBitrate(224000)
 				.SetOverwriteOutput(true);
 
-			var p = new ProgressBar(PbStyle.SingleLine, 100);
-
+			
 			conversion.OnProgress += (sender, args) =>
 			{
-				p.Refresh(args.Percent, Path.GetFileNameWithoutExtension(fileName) + $" - [{ args.TotalLength - args.Duration}]");
+				pbar.Tick(args.Percent, Path.GetFileNameWithoutExtension(fileName) + $" - [{ args.TotalLength - args.Duration}]");
 			};
 
 			Console.CancelKeyPress += (sender, args) =>
 			{
 				args.Cancel = true;
-				Console.WriteLine("Stopped by user");
 				cancellationTokenSource.Cancel(true);
+				pbar.Dispose();
 			};
+
 			await conversion.Start(cancellationTokenSource.Token);
 
 		}

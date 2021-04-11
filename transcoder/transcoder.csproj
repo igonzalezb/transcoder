@@ -1,5 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp5.0</TargetFramework>
@@ -9,18 +8,15 @@
     <ToolCommandName>transcoder</ToolCommandName>
     <PackageOutputPath>./dist</PackageOutputPath>
   </PropertyGroup>
-  
   <ItemGroup>
     <Content Include="icon.ico">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Goblinfactory.Konsole" Version="6.2.0" />
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.7.0" />
-    <PackageReference Include="Xabe.FFmpeg" Version="4.1.1" />
+    <PackageReference Include="Xabe.FFmpeg" Version="4.4.0"/>
+    <PackageReference Include="ShellProgressBar" Version="5.1.0"/>
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0"/>
+    <PackageReference Include="Microsoft.NETCore.Targets" Version="3.0.0" PrivateAssets="all" />
   </ItemGroup>
-
 </Project>
