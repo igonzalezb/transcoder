@@ -349,3 +349,8 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 /transcoder/videosForTest
+transcoder/ffprobe.exe
+transcoder/ffmpeg.exe
+transcoder/__MACOSX/._ffmpeg.exe
+transcoder/__MACOSX/._ffprobe.exe
+transcoder/version.json

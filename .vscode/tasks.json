@@ -33,5 +33,11 @@
             "type": "shell",
             "problemMatcher": "$msCompile"
         },
+        {
+            "label": "publish-win64",
+            "command": "dotnet publish transcoder -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishReadyToRun=true",
+            "type": "shell",
+            "problemMatcher": "$msCompile"
+        },
     ]
 }
