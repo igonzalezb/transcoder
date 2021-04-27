@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using ShellProgressBar;
 using McMaster.Extensions.CommandLineUtils;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace Transcoder
 {
@@ -25,56 +26,61 @@ namespace Transcoder
 			Console.Title = "Transcoder";
 
 			//FFmpeg.SetExecutablesPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FFmpeg"));
-			FFmpeg.SetExecutablesPath(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
+			//FFmpeg.SetExecutablesPath(".");
+			 
             //Get latest version of FFmpeg. It's great idea if you don't know if you had installed FFmpeg.
-            await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
-
+           // await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official);
+			List<string> videos = new List<string>();
+			bool recurse = false;
+			string videoFilter = @"$(?<=\.(mkv|mp4|avi|mk3d|flv|wmv|m4v|webm))";
 			string path;
 			Console.WriteLine(Figgle.FiggleFonts.Standard.Render("Transcoder"));
 			if (!args.Any())
 			{				
 				Console.WriteLine("Welcome to Transcoder!");
 				Console.WriteLine();
-				Console.WriteLine("The HEVC settings are:");
-				Console.WriteLine("ffmpeg -vsync 0 -hwaccel cuvid -c:v h264_cuvid -i video -c:v hevc_nvenc -x265-params crf=20 -spatial_aq 1 -rc-lookahead 20 -preset slow -c:a aac -b:a 224k -map 0 video-trans.mkv");
-				Console.WriteLine();
 				Console.WriteLine("Enter path:");
 				path = Console.ReadLine();
+				path = cleanPath(path);
+				if (Path.HasExtension(path) && Regex.IsMatch(path, videoFilter, RegexOptions.IgnoreCase))
+				{
+					videos.Add(path);					
+				}
+
+				else
+				{					
+					videos = Directory
+						.GetFiles(path, "*.*", recurse ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
+						.Where(x => Regex.IsMatch(x, videoFilter, RegexOptions.IgnoreCase))
+						.ToList();				
+
+				}
 
 				Console.Clear();
 			}
 			else
 			{
-				path = args[0].ToString();
+				foreach (var item in args)
+				{
+					path = cleanPath(item.ToString());
+					if (Path.HasExtension(path) && Regex.IsMatch(path, videoFilter, RegexOptions.IgnoreCase))
+					{
+						videos.Add(path);					
+					}
+					else
+					{
+						videos = Directory
+							.GetFiles(path, "*.*", recurse ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
+							.Where(x => Regex.IsMatch(x, videoFilter, RegexOptions.IgnoreCase))
+							.ToList();
+					}
+					
+				}
 			}
+
 			Console.CursorVisible = false;
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-			{
-  				path = path.Replace("\'", "");
-			}
-			else if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-			{
-				path = path.Trim('"');
-			}
 			
-			List<string> videos = new List<string>();
-
-			if (Path.HasExtension(path) && (Path.GetExtension(path) == ".mkv"))
-			{
-				videos.Add(path);					
-			}
-
-			else
-			{
-				bool recurse = false;
-				string videoFilter = @"$(?<=\.(mkv|mp4|avi|mk3d|flv|wmv|m4v|webm))";
-
-				videos = Directory
-					.GetFiles(path, "*.*", recurse ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
-					.Where(x => Regex.IsMatch(x, videoFilter, RegexOptions.IgnoreCase))
-					.ToList();				
-
-			}
+			/////////////////////////////////////////////////////////////////////////////////////////////
 			foreach (string video in videos)
 			{
 				Console.WriteLine(Path.GetFileName(video));
@@ -106,7 +112,8 @@ namespace Transcoder
 				}
 				catch (System.Exception e)
 				{
-					Console.WriteLine(e);
+					Console.WriteLine("Cancelled by user");
+					Debug.WriteLine(e);
 				}
 								
 			}
@@ -146,7 +153,7 @@ namespace Transcoder
 			{
 				args.Cancel = true;
 				pbar.Dispose();
-				cancellationTokenSource.Cancel(true);
+				cancellationTokenSource.Cancel();
 			};
 
 			var pbarList = new List<ShellProgressBar.ChildProgressBar>();
@@ -275,6 +282,19 @@ namespace Transcoder
 
 			await conversion.Start(cancellationTokenSource.Token);
 
+		}
+
+		private static string cleanPath (string path)
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+  				path = path.Replace("\'", "");
+			}
+			else if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				path = path.Trim('"');
+			}
+			return path;
 		}
 	}
 }
