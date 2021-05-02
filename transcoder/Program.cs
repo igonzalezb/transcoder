@@ -221,7 +221,7 @@ namespace Transcoder
 				?.SetCodec("hevc_nvenc");
 			IStream audioStream = mediaInfo.AudioStreams.FirstOrDefault()
 				?.SetCodec(AudioCodec.aac);
-
+				
 			string codec = mediaInfo.VideoStreams.FirstOrDefault().Codec; //"hevc" - "h264"
 
 			string output = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "-H265.mkv");
@@ -229,10 +229,9 @@ namespace Transcoder
 			var conversion = FFmpeg.Conversions.New();
 			conversion
 				.AddStream(videoStream, audioStream)
-				.AddStream(mediaInfo.SubtitleStreams)
 				.UseHardwareAcceleration("cuda", (codec=="hevc") ? "hevc" : "h264_cuvid", "hevc_nvenc")
 				.AddParameter("-vsync 0", ParameterPosition.PreInput)
-				.AddParameter("-x265-params crf=20 -spatial_aq 1 -rc-lookahead 20", ParameterPosition.PostInput)
+				.AddParameter("-map 0:s? -x265-params crf=20 -spatial_aq 1 -rc-lookahead 20 -c:s copy", ParameterPosition.PostInput)
 				.SetOutput(output)
 				.SetOutputFormat(Format.matroska)
 				.SetPreset(ConversionPreset.Slow)
@@ -264,10 +263,9 @@ namespace Transcoder
 			var conversion = FFmpeg.Conversions.New();
 			conversion
 				.AddStream(videoStream, audioStream)
-				.AddStream(mediaInfo.SubtitleStreams)
 				.UseHardwareAcceleration(HardwareAccelerator.cuvid, VideoCodec.h264_cuvid, VideoCodec.h264_nvenc)
 				.AddParameter("-vsync 0", ParameterPosition.PreInput)
-				.AddParameter("-spatial_aq 1 -rc-lookahead 20", ParameterPosition.PostInput)
+				.AddParameter("-map 0:s? -spatial_aq 1 -rc-lookahead 20 -c:s copy", ParameterPosition.PostInput)
 				.SetOutput(output)
 				.SetOutputFormat(Format.matroska)
 				.SetPreset(ConversionPreset.Slow)

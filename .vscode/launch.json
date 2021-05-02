@@ -12,7 +12,7 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/transcoder/bin/Debug/netcoreapp5.0/transcoder.dll",
-            "args": [],   ///Parks and Recreation - S01E01 - Make My Pit a Park.mkv
+            "args": [],
             "cwd": "${workspaceFolder}/transcoder",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "externalTerminal",
