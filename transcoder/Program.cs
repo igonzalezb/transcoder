@@ -4,22 +4,19 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xabe.FFmpeg;
-using Xabe.FFmpeg.Downloader;
 using System.Collections.Generic;
 using System.Threading;
 using System.Runtime.InteropServices;
 using ShellProgressBar;
-using McMaster.Extensions.CommandLineUtils;
-using System.Reflection;
 using System.Diagnostics;
 
 namespace Transcoder
 {
 	class Program
 	{
-		enum myCodecs
+		enum options
 		{
-			H265, H264
+			H265, H264, Cancel
 		}
 		static async Task Main(string[] args)
 		{
@@ -37,7 +34,7 @@ namespace Transcoder
 			Console.WriteLine(Figgle.FiggleFonts.Standard.Render("Transcoder"));
 			if (!args.Any())
 			{				
-				Console.WriteLine("Welcome to Transcoder!");
+				//Console.WriteLine("Welcome to Transcoder!");
 				Console.WriteLine();
 				Console.WriteLine("Enter path:");
 				path = Console.ReadLine();
@@ -78,7 +75,7 @@ namespace Transcoder
 				}
 			}
 
-			Console.CursorVisible = false;
+			
 			
 			/////////////////////////////////////////////////////////////////////////////////////////////
 			foreach (string video in videos)
@@ -86,36 +83,45 @@ namespace Transcoder
 				Console.WriteLine(Path.GetFileName(video));
 			}
 			Console.WriteLine("");
-
 			
-			if (Prompt.GetYesNo("Look Good?", false))
-			{
-				myCodecs codec;
-				while(true)
-				{
-					codec = (myCodecs)Prompt.GetInt("[0] h265, [1] h264");
-					if(codec == myCodecs.H264 || codec == myCodecs.H265)
-					{
-						Console.Clear();
-						break;
-					}
-					else
-					{
-						Console.WriteLine("Input must be 0 or 1");
-					}
-				}
+			
 				
+			options option;
+			bool wrongInput = true;
+
+			do
+			{
+				Console.WriteLine("Select Option:");
+                string[] array = Enum.GetNames(typeof(options));
+                for (int i = 0; i < array.Length; i++)
+                {
+                    Console.WriteLine($"{i}) {array[i]}");
+                }
+				
+				string value = Console.ReadLine();
+				option = (options)Enum.Parse(typeof(options), value);
+
+				if(Enum.IsDefined(typeof(options), option))
+				{
+					wrongInput = false;
+				}
+				else
+					Console.WriteLine("Error try again\n");
+			}while(wrongInput);
+			
+			if(option != options.Cancel)
+			{
+				Console.CursorVisible = false;
 				try
 				{
-					await StartConverting(videos, codec);
+					await StartConverting(videos, option);
 					Console.WriteLine("Finished All.");	
 				}
 				catch (System.Exception e)
 				{
 					Console.WriteLine("Cancelled by user");
 					Debug.WriteLine(e);
-				}
-								
+				}								
 			}
 
 			Console.WriteLine("Press Any Key to Exit");
@@ -124,7 +130,7 @@ namespace Transcoder
 
 
 		
-		private static async Task StartConverting(List<string> videos, myCodecs _codec)
+		private static async Task StartConverting(List<string> videos, options _codec)
 		{
 			var pbar_opt = new ProgressBarOptions
 			{
@@ -165,7 +171,7 @@ namespace Transcoder
 			}
 			
 
-			if(_codec == myCodecs.H265)
+			if(_codec == options.H265)
 			{
 				for (int i = 0; i < videos.Count; i++, i++)
 				{
@@ -187,7 +193,7 @@ namespace Transcoder
 
 				}
 			}
-			else if(_codec == myCodecs.H264)
+			else if(_codec == options.H264)
 			{
 				for (int i = 0; i < videos.Count; i++, i++)
 				{
