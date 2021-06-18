@@ -1,14 +1,10 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Xabe.FFmpeg;
 using System.Collections.Generic;
 using System.Threading;
-using System.Runtime.InteropServices;
-using ShellProgressBar;
 using System.Diagnostics;
+using Konsole;
 
 namespace Transcoder
 {
@@ -24,67 +20,20 @@ namespace Transcoder
 
 			//FFmpeg.SetExecutablesPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FFmpeg"));
 			//FFmpeg.SetExecutablesPath(".");
-			 
-            //Get latest version of FFmpeg. It's great idea if you don't know if you had installed FFmpeg.
-           // await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official);
-			List<string> videos = new List<string>();
-			bool recurse = false;
-			string videoFilter = @"$(?<=\.(mkv|mp4|avi|mk3d|flv|wmv|m4v|webm))";
-			string path;
-			Console.WriteLine(Figgle.FiggleFonts.Standard.Render("Transcoder"));
-			if (!args.Any())
-			{				
-				//Console.WriteLine("Welcome to Transcoder!");
-				Console.WriteLine();
-				Console.WriteLine("Enter path:");
-				path = Console.ReadLine();
-				path = cleanPath(path);
-				if (Path.HasExtension(path) && Regex.IsMatch(path, videoFilter, RegexOptions.IgnoreCase))
-				{
-					videos.Add(path);					
-				}
+			//Get latest version of FFmpeg. It's great idea if you don't know if you had installed FFmpeg.
+			// await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official);
 
-				else
-				{					
-					videos = Directory
-						.GetFiles(path, "*.*", recurse ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
-						.Where(x => Regex.IsMatch(x, videoFilter, RegexOptions.IgnoreCase))
-						.ToList();				
+			List<string> videos = FileManagerUtils.getVideoFiles(args);
 
-				}
 
-				Console.Clear();
-			}
-			else
-			{
-				foreach (var item in args)
-				{
-					path = cleanPath(item.ToString());
-					if (Path.HasExtension(path) && Regex.IsMatch(path, videoFilter, RegexOptions.IgnoreCase))
-					{
-						videos.Add(path);					
-					}
-					else
-					{
-						videos = Directory
-							.GetFiles(path, "*.*", recurse ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
-							.Where(x => Regex.IsMatch(x, videoFilter, RegexOptions.IgnoreCase))
-							.ToList();
-					}
-					
-				}
-			}
-
-			
-			
 			/////////////////////////////////////////////////////////////////////////////////////////////
+			Console.WriteLine($"Found {videos.Count} files:");
 			foreach (string video in videos)
 			{
 				Console.WriteLine(Path.GetFileName(video));
 			}
 			Console.WriteLine("");
-			
-			
+				
 				
 			options option;
 			bool wrongInput = true;
@@ -112,10 +61,12 @@ namespace Transcoder
 			if(option != options.Cancel)
 			{
 				Console.CursorVisible = false;
+				Console.Clear();
 				try
 				{
 					await StartConverting(videos, option);
-					Console.WriteLine("Finished All.");	
+					Console.WriteLine("Finished All.");
+					Console.Beep();
 				}
 				catch (System.Exception e)
 				{
@@ -131,174 +82,63 @@ namespace Transcoder
 
 		
 		private static async Task StartConverting(List<string> videos, options _codec)
-		{
-			var pbar_opt = new ProgressBarOptions
-			{
-				BackgroundCharacter = '\u2593',
-				BackgroundColor = ConsoleColor.DarkGray,
-				ProgressBarOnBottom = false,
-        		ForegroundColorDone = ConsoleColor.Green,
-        		ForegroundColor = ConsoleColor.DarkYellow,
-				CollapseWhenFinished = false,
-				DisplayTimeInRealTime = false,
-				ShowEstimatedDuration = false,
-				
-			};
-			var _options = new ProgressBarOptions
-			{
-				ProgressCharacter = '_',
-				ProgressBarOnBottom = true,
-        		ForegroundColorDone = ConsoleColor.Green,
-        		ForegroundColor = ConsoleColor.White,
-				CollapseWhenFinished = false,
-				DisplayTimeInRealTime = true,				
-			};
-			using var pbar = new ShellProgressBar.ProgressBar(videos.Count, $"Finished: 0 of {videos.Count} - (Press ctrl+c to cancel)", pbar_opt);
+		{					
 			var cancellationTokenSource = new CancellationTokenSource();
 			Console.CancelKeyPress += (sender, args) =>
 			{
 				args.Cancel = true;
-				pbar.Dispose();
 				cancellationTokenSource.Cancel();
 			};
 
-			var pbarList = new List<ShellProgressBar.ChildProgressBar>();
+			var bars = new List<ProgressBar>();
 
-			foreach (string video in videos)
-			{
-				pbarList.Add(pbar.Spawn(100, Path.GetFileNameWithoutExtension(video) + " - [00:00:00]", _options));
-				
-			}
+			//var pbarList = new List<ShellProgressBar.ChildProgressBar>();
+
+			//List<Task> jobsList = new();
+			//List<Action> actionList = new();
+			Console.Title = $"Transcoder - {0}/{videos.Count}";
+			Console.ForegroundColor = ConsoleColor.DarkYellow;
+			Console.WriteLine($"Transcoding {videos.Count} videos - (Press ctrl+c to cancel)\n");
+			Console.ResetColor();
 			
-
-			if(_codec == options.H265)
+			for (int i = 0; i < videos.Count; i++)
 			{
-				for (int i = 0; i < videos.Count; i++, i++)
-				{
-					if ((i + 1) < videos.Count)
-					{
-						await Task.WhenAll(
-							Convert_H265_cuvid(videos[i], pbarList[i], cancellationTokenSource), 
-							Convert_H265_cuvid(videos[i + 1], pbarList[i+1], cancellationTokenSource));
-						
-						pbar.Tick();
-						pbar.Tick($"Finished: {i + 2} of {videos.Count} - (Press ctrl+c to cancel)");
-					}
-
-					else
-					{
-						await Convert_H265_cuvid(videos[i], pbarList[i], cancellationTokenSource);
-						pbar.Tick($"Finished: {i + 1} of {videos.Count} - (Press ctrl+c to cancel)");
-					}
-
-				}
+				//var length = videos.Max(s => s.Length);
+				bars.Add(new ProgressBar(100));
+				bars[i].Refresh(0, $"{Path.GetFileNameWithoutExtension(videos[i])} - [00:00:00]");
+				//pbarList.Add(pbar.Spawn(100, Path.GetFileNameWithoutExtension(video) + " - [00:00:00]", _options)); 
+				//jobsList.Add(new Task(async () => await Codecs.Convert_H265_cuvid(video, pbarList.Last(), cancellationTokenSource)));
+				//actionList.Add(new Action(async () => await Codecs.Convert_H265_cuvid(video, pbarList.Last(), cancellationTokenSource)));
+				//jobsList.Add(Codecs.Convert_H265_cuvid(video, pbarList.Last(), cancellationTokenSource));
 			}
-			else if(_codec == options.H264)
+			//await TasksUtilities.StartAndWaitAllThrottledAsync(jobsList, 2, cancellationTokenSource.Token);		
+
+			Func<string, ProgressBar, CancellationTokenSource, Task>[] funcArray = {Codecs.Convert_H265_cuvid, Codecs.Convert_H264 };
+
+			for (int i = 0; i < videos.Count; i++, i++)
 			{
-				for (int i = 0; i < videos.Count; i++, i++)
+				if ((i + 1) < videos.Count)
 				{
-					if ((i + 1) < videos.Count)
-					{
-						await Task.WhenAll(
-							Convert_H264(videos[i], pbarList[i], cancellationTokenSource), 
-							Convert_H264(videos[i + 1], pbarList[i+1], cancellationTokenSource));
-						
-						pbar.Tick();
-						pbar.Tick($"Finished: {i + 2} of {videos.Count} - (Press ctrl+c to cancel)");
-					}
+					await Task.WhenAll(
+						funcArray[(int)_codec](videos[i], bars[i], cancellationTokenSource),
+						funcArray[(int)_codec](videos[i + 1], bars[i + 1], cancellationTokenSource));
 
-					else
-					{
-						await Convert_H264(videos[i], pbarList[i], cancellationTokenSource);
-						pbar.Tick($"Finished: {i + 1} of {videos.Count} - (Press ctrl+c to cancel)");
-					}
-
+					Console.Title = $"Transcoder - {i + 2}/{videos.Count}";
 				}
+
+				else
+				{
+					await funcArray[(int)_codec](videos[i], bars[i], cancellationTokenSource);
+					Console.Title = $"Transcoder - {i + 1}/{videos.Count}";
+				}
+
 			}
 
 			cancellationTokenSource.Cancel(true);
 
 		}
 
-		private static async Task Convert_H265_cuvid(string fileName, ShellProgressBar.ChildProgressBar pbar, CancellationTokenSource cancellationTokenSource)
-		{
-			IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(fileName);
-			IStream videoStream = mediaInfo.VideoStreams.FirstOrDefault()
-				?.SetCodec("hevc_nvenc");
-			IStream audioStream = mediaInfo.AudioStreams.FirstOrDefault()
-				?.SetCodec(AudioCodec.aac);
-				
-			string codec = mediaInfo.VideoStreams.FirstOrDefault().Codec; //"hevc" - "h264"
 
-			string output = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "-H265.mkv");
-
-			var conversion = FFmpeg.Conversions.New();
-			conversion
-				.AddStream(videoStream, audioStream)
-				.UseHardwareAcceleration("cuda", (codec=="hevc") ? "hevc" : "h264_cuvid", "hevc_nvenc")
-				.AddParameter("-vsync 0", ParameterPosition.PreInput)
-				.AddParameter("-map 0:s? -x265-params crf=20 -spatial_aq 1 -rc-lookahead 20 -c:s copy", ParameterPosition.PostInput)
-				.SetOutput(output)
-				.SetOutputFormat(Format.matroska)
-				.SetPreset(ConversionPreset.Slow)
-				.SetAudioBitrate(224000)
-				.SetOverwriteOutput(true);
-
-			
-			conversion.OnProgress += (sender, args) =>
-			{
-				pbar.Tick(args.Percent, Path.GetFileNameWithoutExtension(fileName) + $" - [{ args.TotalLength - args.Duration}]");
-			};
-
-			
-
-			await conversion.Start(cancellationTokenSource.Token);
-
-		}
-
-		private static async Task Convert_H264(string fileName, ShellProgressBar.ChildProgressBar pbar, CancellationTokenSource cancellationTokenSource)
-		{
-			IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(fileName);
-			IStream videoStream = mediaInfo.VideoStreams.FirstOrDefault();
-			IStream audioStream = mediaInfo.AudioStreams.FirstOrDefault()
-				?.SetCodec(AudioCodec.aac);
-
-
-			string output = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "-H264.mkv");
-
-			var conversion = FFmpeg.Conversions.New();
-			conversion
-				.AddStream(videoStream, audioStream)
-				.UseHardwareAcceleration(HardwareAccelerator.cuvid, VideoCodec.h264_cuvid, VideoCodec.h264_nvenc)
-				.AddParameter("-vsync 0", ParameterPosition.PreInput)
-				.AddParameter("-map 0:s? -spatial_aq 1 -rc-lookahead 20 -c:s copy", ParameterPosition.PostInput)
-				.SetOutput(output)
-				.SetOutputFormat(Format.matroska)
-				.SetPreset(ConversionPreset.Slow)
-				.SetAudioBitrate(224000)
-				.SetOverwriteOutput(true);
-
-			
-			conversion.OnProgress += (sender, args) =>
-			{
-				pbar.Tick(args.Percent, Path.GetFileNameWithoutExtension(fileName) + $" - [{ args.TotalLength - args.Duration}]");
-			};
-
-			await conversion.Start(cancellationTokenSource.Token);
-
-		}
-
-		private static string cleanPath (string path)
-		{
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-			{
-  				path = path.Replace("\'", "");
-			}
-			else if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-			{
-				path = path.Trim('"');
-			}
-			return path;
-		}
+		
 	}
 }

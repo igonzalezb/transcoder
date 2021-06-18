@@ -14,11 +14,11 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xabe.FFmpeg" Version="4.4.0"/>
-    <PackageReference Include="ShellProgressBar" Version="5.1.0"/>
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0"/>
-    <PackageReference Include="Microsoft.NETCore.Targets" Version="3.0.0" PrivateAssets="all"/>
-    <PackageReference Include="Figgle" Version="0.4.0"/>
-    <PackageReference Include="Xabe.FFmpeg.Downloader" Version="4.4.0"/>
+    <PackageReference Include="Goblinfactory.Konsole" Version="6.2.2" />
+    <PackageReference Include="Xabe.FFmpeg" Version="5.0.2" />
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
+    <PackageReference Include="Microsoft.NETCore.Targets" Version="5.0.0" PrivateAssets="all" />
+    <PackageReference Include="Figgle" Version="0.4.0" />
+    <PackageReference Include="Xabe.FFmpeg.Downloader" Version="5.0.2" />
   </ItemGroup>
 </Project>
