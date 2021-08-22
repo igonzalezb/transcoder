@@ -11,9 +11,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/transcoder/bin/Debug/netcoreapp5.0/transcoder.dll",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp5.0/transcoder.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/transcoder",
+            "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "externalTerminal",
             "stopAtEntry": false

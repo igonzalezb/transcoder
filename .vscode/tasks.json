@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/transcoder/transcoder.csproj",
+                "${workspaceFolder}/transcoder.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -19,13 +19,39 @@
             "type": "process",
             "args": [
                 "pack",
-                "${workspaceFolder}/transcoder/transcoder.csproj",
+                "${workspaceFolder}/transcoder.csproj",
             ],
             "problemMatcher": "$msCompile",
             "dependsOrder": "sequence",
             "dependsOn": [
                 "build"
             ]
+        },
+        {
+            "label": "install",
+            "command": "dotnet tool install --global --add-source ./dist transcoder",
+            "type": "shell",
+            "problemMatcher": "$msCompile",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "pack"
+            ]
+        },
+        {
+            "label": "uninstall",
+            "command": "dotnet tool uninstall -g transcoder",
+            "type": "shell",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "update",
+            "problemMatcher": "$msCompile",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "uninstall",
+                "install"
+            ]
+
         },
         {
             "label": "publish-linux",

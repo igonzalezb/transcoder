@@ -16,65 +16,71 @@ namespace Transcoder
 		}
 		static async Task Main(string[] args)
 		{
+			Console.Clear();
 			Console.Title = "Transcoder";
 
 			//FFmpeg.SetExecutablesPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FFmpeg"));
 			//FFmpeg.SetExecutablesPath(".");
 			//Get latest version of FFmpeg. It's great idea if you don't know if you had installed FFmpeg.
 			// await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official);
-
-			List<string> videos = FileManagerUtils.getVideoFiles(args);
-
-
-			/////////////////////////////////////////////////////////////////////////////////////////////
-			Console.WriteLine($"Found {videos.Count} files:");
-			foreach (string video in videos)
+			if (args[0] == "-contextmenu")
 			{
-				Console.WriteLine(Path.GetFileName(video));
+				ContextMenu.setContextMenu(args[1]);
 			}
-			Console.WriteLine("");
-				
-				
-			options option;
-			bool wrongInput = true;
-
-			do
+			else
 			{
-				Console.WriteLine("Select Option:");
-                string[] array = Enum.GetNames(typeof(options));
-                for (int i = 0; i < array.Length; i++)
-                {
-                    Console.WriteLine($"{i}) {array[i]}");
-                }
-				
-				string value = Console.ReadLine();
-				option = (options)Enum.Parse(typeof(options), value);
+				List<string> videos = FileManagerUtils.getVideoFiles(args);
 
-				if(Enum.IsDefined(typeof(options), option))
+
+				/////////////////////////////////////////////////////////////////////////////////////////////
+				Console.WriteLine($"Found {videos.Count} files:");
+				foreach (string video in videos)
 				{
-					wrongInput = false;
+					Console.WriteLine(Path.GetFileName(video));
 				}
-				else
-					Console.WriteLine("Error try again\n");
-			}while(wrongInput);
-			
-			if(option != options.Cancel)
-			{
-				Console.CursorVisible = false;
-				Console.Clear();
-				try
+				Console.WriteLine("");
+					
+					
+				options option;
+				bool wrongInput = true;
+
+				do
 				{
-					await StartConverting(videos, option);
-					Console.WriteLine("Finished All.");
-					Console.Beep();
+					Console.WriteLine("Select Option:");
+					string[] array = Enum.GetNames(typeof(options));
+					for (int i = 0; i < array.Length; i++)
+					{
+						Console.WriteLine($"{i}) {array[i]}");
+					}
+					
+					string value = Console.ReadLine();
+					option = (options)Enum.Parse(typeof(options), value);
+
+					if(Enum.IsDefined(typeof(options), option))
+					{
+						wrongInput = false;
+					}
+					else
+						Console.WriteLine("Error try again\n");
+				}while(wrongInput);
+				
+				if(option != options.Cancel)
+				{
+					Console.CursorVisible = false;
+					Console.Clear();
+					try
+					{
+						await StartConverting(videos, option);
+						Console.WriteLine("Finished All.");
+						Console.Beep();
+					}
+					catch (System.Exception e)
+					{
+						Console.WriteLine("Cancelled by user");
+						Debug.WriteLine(e);
+					}								
 				}
-				catch (System.Exception e)
-				{
-					Console.WriteLine("Cancelled by user");
-					Debug.WriteLine(e);
-				}								
 			}
-
 			Console.WriteLine("Press Any Key to Exit");
 			Console.ReadKey();
 		}

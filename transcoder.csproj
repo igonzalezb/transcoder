@@ -6,7 +6,9 @@
     <RootNamespace>Transcoder</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <ToolCommandName>transcoder</ToolCommandName>
+    <PackAsTool>true</PackAsTool>
     <PackageOutputPath>./dist</PackageOutputPath>
+    <Version>2.0.1</Version>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="icon.ico">
@@ -14,11 +16,12 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Goblinfactory.Konsole" Version="6.2.2" />
-    <PackageReference Include="Xabe.FFmpeg" Version="5.0.2" />
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
-    <PackageReference Include="Microsoft.NETCore.Targets" Version="5.0.0" PrivateAssets="all" />
-    <PackageReference Include="Figgle" Version="0.4.0" />
-    <PackageReference Include="Xabe.FFmpeg.Downloader" Version="5.0.2" />
+    <PackageReference Include="Goblinfactory.Konsole" Version="6.2.2"/>
+    <PackageReference Include="Xabe.FFmpeg" Version="5.0.2"/>
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0"/>
+    <PackageReference Include="Microsoft.NETCore.Targets" Version="5.0.0" PrivateAssets="all"/>
+    <PackageReference Include="Figgle" Version="0.4.0"/>
+    <PackageReference Include="Xabe.FFmpeg.Downloader" Version="5.0.2"/>
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0"/>
   </ItemGroup>
 </Project>
