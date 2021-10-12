@@ -23,7 +23,7 @@ namespace Transcoder
 			//FFmpeg.SetExecutablesPath(".");
 			//Get latest version of FFmpeg. It's great idea if you don't know if you had installed FFmpeg.
 			// await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official);
-			if (args[0] == "-contextmenu")
+			if (args.Length > 0 && args[0] == "-contextmenu")
 			{
 				ContextMenu.setContextMenu(args[1]);
 			}
