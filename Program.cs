@@ -12,7 +12,7 @@ namespace Transcoder
 	{
 		enum options
 		{
-			H265, H264, Cancel
+			H265, H264, _10Bit_to_8Bit,Cancel
 		}
 		static async Task Main(string[] args)
 		{
@@ -30,7 +30,6 @@ namespace Transcoder
 			else
 			{
 				List<string> videos = FileManagerUtils.getVideoFiles(args);
-
 
 				/////////////////////////////////////////////////////////////////////////////////////////////
 				Console.WriteLine($"Found {videos.Count} files:");
@@ -119,7 +118,7 @@ namespace Transcoder
 			}
 			//await TasksUtilities.StartAndWaitAllThrottledAsync(jobsList, 2, cancellationTokenSource.Token);		
 
-			Func<string, ProgressBar, CancellationTokenSource, Task>[] funcArray = {Codecs.Convert_H265_cuvid, Codecs.Convert_H264 };
+			Func<string, ProgressBar, CancellationTokenSource, Task>[] funcArray = {Codecs.Convert_H265_cuvid, Codecs.Convert_H264, Codecs.Convert_10bit_to_8bit };
 
 			for (int i = 0; i < videos.Count; i++, i++)
 			{
