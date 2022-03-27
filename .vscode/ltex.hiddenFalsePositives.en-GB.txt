@@ -1,0 +1,2 @@
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QConvert video from x265 10 Bit to x265 8 Bit.\\E$"}
+{"rule":"CD_NN","sentence":"^\\QConvert video from x265 10 Bit to x265 8 Bit.\\E$"}
