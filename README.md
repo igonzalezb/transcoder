@@ -9,7 +9,7 @@ Cross-platform FFmpeg transcoder to reduce file size while trying to keep video 
 - Convert video from x265 10 Bit to x265 8 Bit. 
 
 ## Installation
-Download the pre-compiled latest [Release.](transcoder/releases/latest)
+Download the pre-compiled latest [Release.](https://github.com/igonzalezb/transcoder/releases/latest)
 
 The files are ready to run. **FFMPEG MUST BE INSTALLED AND IN PATH.**
 
